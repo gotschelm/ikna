@@ -239,13 +239,13 @@ class Ikna(object):
         else:
             return [((0,0), """Add data yourself with netpaper.update(data=yourdata)  or choose a valid NetPaper.datasource, 'netstat' or 'firewall'""")]
         
-    def update(self, data=None, template=None):
+    def update(self, data=None, template=None, layer=None):
         """
             Collects data from the datasource (self.datasource) if no data is given.
             Draws the data and sets the background if self.setbg = True
         """
         drawdata = self.makedrawdata(data,template) #this allows templating
-        self.draw(drawdata) 
+        self.draw(drawdata, layer) 
         self.drawimage.save(self.dstimg)
         if self.setbg==True:
             os.popen("feh --bg-max " + self.dstimg)
