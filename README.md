@@ -7,6 +7,7 @@ from netstat or your firewall log on a world map.
 This is a toy and a work in progress. See this readme and ikna.py for help.
 
 
+
 Some features
 --------------
 * Mercator or equirectangular map projection
@@ -117,3 +118,10 @@ In case of conflict, pygeoip variables will win over your custom dict keys
 
     ikna = Ikna(srcimg="/tmp/map.png")
     ikna.update(data=mydata, template="$ip $someinfo $country_code" )
+
+Maps
+----
+Here is are some cool ones:
+http://internetcensus2012.bitbucket.org/images.html
+
+I like using worldmap_nolegend_16to9_3200x1800.png and setting yshift=125
