@@ -39,43 +39,24 @@ Examples/Howto
 Explanation of init variables
 -----------------------------
 
-**srcimg**  
-path to your world map image  
-**dstimg**  
-path to your desired output image, defaults to /run/shm/ikna.png  
-**geoipdb**  
-location of your GeoIP database, "/usr/share/GeoIP/GeoLiteCity.dat" is the default  
-**font**  
-path to your truetype font of choice  
-**width**  
-width of your image, this is set automatically but you can override it with this variable  
-**height**  
-height of your image, this is set automatically but you can override it with this variable  
-**radius**  
-the radius in pixels of the dot that is drawn  
-**fontsize**  
-size of the font used in the labels  
-**projection**  
-"mercator" or "equirectangular"  
-**xshift**  
-After projection is calculated, this value is added to the X part of the coordinate, use this when your map isn't properly aligned  
-**yshift**  
-After projection is calculated, this value is added to the Y part of the coordinate, use this when your map isn't properly aligned  
-**datasource**  
-"netstat" or "firewall", make sure your /var/log/messages is readable  
-**statefilter**  
-only applicable when datasource="netstat", this does a simple grep on the netstat output, set it to "ESTABLISHED" to only plot established connections. see man netstat  
-**fwlog**  
-path to your firewall log, default is /var/log/messages  
-**template**  
-the default template to use, defaults to "$ip"  
-**layer**  
-not used yet  
-**showonlythelast**  
-show only the last x items  
-**setbg**  
-True or False. the background will be set with 'feh' if this is set to True  
-
+**srcimg**  path to your world map image  
+**dstimg**  path to your desired output image, defaults to /run/shm/ikna.png  
+**geoipdb**  location of your GeoIP database, "/usr/share/GeoIP/GeoLiteCity.dat" is the default  
+**font**  path to your truetype font of choice  
+**width**  width of your image, this is set automatically but you can override it with this variable  
+**height**  height of your image, this is set automatically but you can override it with this variable  
+**radius**  the radius in pixels of the dot that is drawn  
+**fontsize**  size of the font used in the labels  
+**projection**  "mercator" or "equirectangular"  
+**xshift**  After projection is calculated, this value is added to the X part of the coordinate, use this when your map isn't properly aligned  
+**yshift**  After projection is calculated, this value is added to the Y part of the coordinate, use this when your map isn't properly aligned  
+**datasource**  "netstat" or "firewall", make sure your /var/log/messages is readable  
+**statefilter**  only applicable when datasource="netstat", this does a simple grep on the netstat output, set it to "ESTABLISHED" to only plot established connections. see man netstat  
+**fwlog**  path to your firewall log, default is /var/log/messages  
+**template**  the default template to use, defaults to "$ip"  
+**layer**  not used yet  
+**showonlythelast**  show only the last x items  
+**setbg**  True or False. the background will be set with 'feh' if this is set to True  
 
 
 Template variables
