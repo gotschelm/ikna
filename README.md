@@ -6,7 +6,7 @@ from netstat or your firewall log on a world map.
 
 This is a toy and a work in progress. See this readme and ikna.py for help.
 
-
+See screenshot.png for an example of how it could look like when plotting a firewall log.
 
 Some features
 --------------
