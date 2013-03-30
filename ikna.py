@@ -1,6 +1,24 @@
+#!/usr/bin/env python
+#
+# Copyright 2013 Cornelis Gotschelm <gotschelm gmail com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 import ImageFont, Image, ImageDraw
 import pygeoip
-import psutil
+#import psutil
 import os
 import time
 import math
@@ -116,6 +134,7 @@ class Ikna(object):
     def get_netstat(self):
         """
             Get active connections using psutil
+            Uncomment "#import psutil" above to make this work
         """
         remote_ips = []
         for p in psutil.process_iter():
@@ -262,9 +281,13 @@ class Ikna(object):
 
 #
 
+def main():
+    ikna = Ikna(fontsize=20, yshift=125, datasource="firewall", showonlythelast=20)
+    while True:
+        ikna.update(template="$ip $port $proto $country_code")
+        #a.update( data=[ { 'ip': '8.8.8.8' , 'someinfo': 'Google DNS server'} ])
+        time.sleep(30)
 
-a = Ikna(fontsize=20, yshift=125, datasource="firewall", showonlythelast=20)
-while True:
-    a.update(template="$ip $port $proto $country_code")
-    #a.update( data=[ { 'ip': '8.8.8.8' , 'someinfo': 'Google DNS server'} ])
-    time.sleep(30)
+if __name__ == "__main__":
+    main()
+
