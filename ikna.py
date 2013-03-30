@@ -75,7 +75,6 @@ class Ikna(object):
     def ip_to_latlon(self, ip):
         """
             Returns latitude, longitude of IP address
-            TODO: make a better interface so that we can also add city and country code to a label
         """
         query = self.gi.record_by_addr(ip)
         lat,lon = query['latitude'], query['longitude']
