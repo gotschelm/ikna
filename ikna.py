@@ -76,9 +76,11 @@ class Ikna(object):
         """
             Returns latitude, longitude of IP address
         """
+        #print ip
         query = self.gi.record_by_addr(ip)
         lat,lon = query['latitude'], query['longitude']
         return (lat,lon)
+        
                 
     def coord_to_xy(self, coord):
         """
@@ -148,7 +150,8 @@ class Ikna(object):
                     if c.remote_address:
                         ip = c.remote_address[0]
                         if ip not in remote_ips:
-                            remote_ips.append(ip)
+                            if self.ispublic(ip):
+                                remote_ips.append(ip)
         return remote_ips
         
     def parse_netstat(self):
@@ -171,8 +174,9 @@ class Ikna(object):
         for line in data:
             ip = line.split()[4].split(':')[0]
             port = line.split()[4].split(':')[-1]
-            if ip not in remote_ips:
-                remote_ips.append( { 'ip' : ip , 'port' : port } )
+            if self.ispublic(ip):
+                if ip not in remote_ips:
+                    remote_ips.append( { 'ip' : ip , 'port' : port } )
         return remote_ips
         
     def parse_firewall(self):
@@ -185,14 +189,12 @@ class Ikna(object):
             for line in fd:
                 try:
                     (srcip, proto, dport) = pat.search(line).groups()
-                    templist.append( { 'ip' : srcip, 'proto': proto, 'port': dport } )
+                    if self.ispublic(srcip):
+                        templist.append( { 'ip' : srcip, 'proto': proto, 'port': dport } )
                 except:
                     pass
         #reverse the list before uniqifying so the last log entry will stick
         uniqlist = self._uniqify(templist[::-1]) 
-        #if not uniqlist: 
-            #print "No firewall data found. Quitting."
-            #exit()
         return uniqlist[::-1] #reverse back to the proper order
 
     def ip_to_xy(self, ip):
@@ -200,6 +202,19 @@ class Ikna(object):
             Wrapper function that returns X,Y coords for a given IP
         """
         return self.coord_to_xy(self.ip_to_latlon(ip))
+
+    def ispublic(self,ip):
+        regexs = [  re.compile("^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$"),
+                    re.compile("^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$"),
+                    re.compile("^192\.168\.\d{1,3}\.\d{1,3}$"),
+                    re.compile("^172\.(1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3}$") ]
+        for regex in regexs:
+            if regex.match(ip):
+                #print ip, "is private"
+                return False
+        #print ip, "is public"
+        return True
+
 
     def makedrawdata(self, data=None, template=None):
         """
@@ -286,7 +301,9 @@ class Ikna(object):
 #
 
 def main():
+    
     ikna = Ikna(fontsize=20, yshift=125, datasource="firewall", showonlythelast=20)
+
     while True:
         ikna.update(template="$ip $port $proto $country_code")
         #a.update( data=[ { 'ip': '8.8.8.8' , 'someinfo': 'Google DNS server'} ])
