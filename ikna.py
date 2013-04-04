@@ -188,6 +188,9 @@ class Ikna(object):
                     pass
         #reverse the list before uniqifying so the last log entry will stick
         uniqlist = self._uniqify(templist[::-1]) 
+        if not uniqlist: 
+            print "No firewall data found. Quitting."
+            exit()
         return uniqlist[::-1] #reverse back to the proper order
 
     def ip_to_xy(self, ip):
