@@ -116,7 +116,9 @@ class Ikna(object):
         #### !! SLICES 
         slce=-self.showonlythelast
         draw = ImageDraw.Draw(self.drawimage)
-        colorstep = math.sqrt(255)/len(data[slce:])
+        num_nodes = len(data[slce:])
+        if num_nodes == 0: num_nodes = 1
+        colorstep = math.sqrt(255)/num_nodes
         colorx = 0.0
         for node in data[slce:]:
             x,y = node[0]
@@ -188,9 +190,9 @@ class Ikna(object):
                     pass
         #reverse the list before uniqifying so the last log entry will stick
         uniqlist = self._uniqify(templist[::-1]) 
-        if not uniqlist: 
-            print "No firewall data found. Quitting."
-            exit()
+        #if not uniqlist: 
+            #print "No firewall data found. Quitting."
+            #exit()
         return uniqlist[::-1] #reverse back to the proper order
 
     def ip_to_xy(self, ip):
