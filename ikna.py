@@ -178,7 +178,7 @@ class Ikna(object):
             Returns [ {'ip': ip, 'proto': proto, 'port' : port},]
         """
         templist = []
-        pat = re.compile(r"^.*SRC=(\d+.\d+.\d+.\d+).*PROTO=([A-Z]*).*DPT=([0-9]*).*$")
+        pat = re.compile(r"^.*SRC=(\d+\.\d+\.\d+\.\d+).*PROTO=([A-Z]*).*DPT=([0-9]*).*$")
         with open(self.fwlog, 'r') as fd:
             for line in fd:
                 try:
