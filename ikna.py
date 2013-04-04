@@ -184,7 +184,7 @@ class Ikna(object):
             Returns [ {'ip': ip, 'proto': proto, 'port' : port},]
         """
         templist = []
-        pat = re.compile(r"^.*SRC=(\d+\.\d+\.\d+\.\d+).*PROTO=([A-Z]*).*DPT=([0-9]*).*$")
+        pat = re.compile(r"^.*SRC=(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*PROTO=([A-Z]*).*DPT=([0-9]*).*$")
         with open(self.fwlog, 'r') as fd:
             for line in fd:
                 try:
@@ -207,7 +207,7 @@ class Ikna(object):
         regexs = [  re.compile("^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$"),
                     re.compile("^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$"),
                     re.compile("^192\.168\.\d{1,3}\.\d{1,3}$"),
-                    re.compile("^172\.(1[6-9]|2[0-9]|3[0-1])\.[0-9]{1,3}\.[0-9]{1,3}$") ]
+                    re.compile("^172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$") ]
         for regex in regexs:
             if regex.match(ip):
                 #print ip, "is private"
