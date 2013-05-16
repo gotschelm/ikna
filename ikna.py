@@ -78,14 +78,19 @@ class Ikna(object):
         """
         #print ip
         query = self.gi.record_by_addr(ip)
+        if not query:
+            return False
         lat,lon = query['latitude'], query['longitude']
         return (lat,lon)
+        
         
                 
     def coord_to_xy(self, coord):
         """
             Converts latitude and longitude to X,Y coordinates
         """
+        if not coord:
+            return False
         lat,lon = coord
         
         if self.projection == "mercator":
@@ -201,7 +206,11 @@ class Ikna(object):
         """
             Wrapper function that returns X,Y coords for a given IP
         """
-        return self.coord_to_xy(self.ip_to_latlon(ip))
+        result = self.coord_to_xy(self.ip_to_latlon(ip))
+        if result:
+            return result
+        else:
+            return False
 
     def ispublic(self,ip):
         regexs = [  re.compile("^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$"),
@@ -214,7 +223,6 @@ class Ikna(object):
                 return False
         #print ip, "is public"
         return True
-
 
     def makedrawdata(self, data=None, template=None):
         """
@@ -248,13 +256,13 @@ class Ikna(object):
         
         if data:
             return [(self.ip_to_xy(node['ip']), 
-                    _apply_template(node)) for node in data]
+                    _apply_template(node)) for node in data if self.ip_to_xy(node['ip'])]
         if self.datasource == "netstat":
             return [(self.ip_to_xy(node['ip']), 
-                    _apply_template(node)) for node in self.parse_netstat()]
+                    _apply_template(node)) for node in self.parse_netstat() if self.ip_to_xy(node['ip'])]
         elif self.datasource == "firewall":
             return [(self.ip_to_xy(node['ip']), 
-                    _apply_template(node)) for node in self.parse_firewall()]
+                    _apply_template(node)) for node in self.parse_firewall() if self.ip_to_xy(node['ip'])]
         else:
             return [((0,0), """Add data yourself with netpaper.update(data=yourdata)  or choose a valid NetPaper.datasource, 'netstat' or 'firewall'""")]
         
