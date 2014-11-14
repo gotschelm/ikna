@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 #
 # Copyright 2013 Cornelis Gotschelm <gotschelm gmail com>
 #
@@ -15,10 +17,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-import ImageFont, Image, ImageDraw
+import ImageFont
+import Image
+import ImageDraw
 import pygeoip
-#import psutil
+
+# import psutil
+
 import os
 import time
 import math
@@ -26,124 +31,147 @@ import socket
 import re
 import string
 
+
 class Ikna(object):
-    def __init__(self,  srcimg=None, 
-                        dstimg=None, 
-                        geoipdb=None,
-                        font=None,
-                        width=None,
-                        height=None,
-                        radius=5,
-                        fontsize=20,
-                        projection=None,
-                        xshift=0,
-                        yshift=0,
-                        datasource=None,
-                        statefilter=None,
-                        fwlog=None,
-                        template="$ip",
-                        layer=False,
-                        showonlythelast=0,
-                        setbg=True):
-        
-        self.dstimg = dstimg or "/dev/shm/ikna.png"
-        self.srcimg = srcimg or "/tmp/worldmap_nolegend_16to9_3200x1800.png"
-        self.geoipdb = geoipdb or "/usr/share/GeoIP/GeoLiteCity.dat"
-        self.font = font or "/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf"
+
+    def __init__(self,
+                 srcimg=None,
+                 dstimg=None,
+                 geoipdb=None,
+                 font=None,
+                 width=None,
+                 height=None,
+                 radius=5,
+                 fontsize=20,
+                 projection=None,
+                 xshift=0,
+                 yshift=0,
+                 datasource=None,
+                 statefilter=None,
+                 fwlog=None,
+                 template='$ip',
+                 layer=False,
+                 showonlythelast=0,
+                 setbg=True,
+                ):
+
+        self.dstimg = dstimg or '/dev/shm/ikna.png'
+        self.srcimg = srcimg \
+            or '/tmp/worldmap_nolegend_16to9_3200x1800.png'
+        self.geoipdb = geoipdb or '/usr/share/GeoIP/GeoLiteCity.dat'
+        self.font = font \
+            or '/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf'
         self.fontsize = fontsize
         self.imagefont = ImageFont.truetype(self.font, self.fontsize)
         self.statefilter = statefilter
         self.radius = radius
-        self.projection = projection or "mercator"
+        self.projection = projection or 'mercator'
         self.xshift = xshift
         self.yshift = yshift
-        self.datasource = datasource or "firewall"
+        self.datasource = datasource or 'firewall'
         self.cleanimage = Image.open(self.srcimg)
         self.drawimage = self.cleanimage.copy()
-        self.imagewidth, self.imageheight = self.cleanimage.size
-        #override size if given
-        if width: self.imagewidth = width
-        if height: self.imageheight = height
+        (self.imagewidth, self.imageheight) = self.cleanimage.size
+
+        # override size if given
+
+        if width:
+            self.imagewidth = width
+        if height:
+            self.imageheight = height
         self.gi = pygeoip.GeoIP(self.geoipdb)
-        self.fwlog = fwlog or "/var/log/messages"
-        self.setbg=setbg
-        self.template=template
-        self.layer=layer
-        self.rdnscache={}
-        self.showonlythelast=showonlythelast
-        
+        self.fwlog = fwlog or '/var/log/iptables.log'
+        self.setbg = setbg
+        self.template = template
+        self.layer = layer
+        self.rdnscache = {}
+        self.showonlythelast = showonlythelast
+
     def ip_to_latlon(self, ip):
         """
             Returns latitude, longitude of IP address
         """
-        #print ip
+
+        # print ip
+
         query = self.gi.record_by_addr(ip)
         if not query:
             return False
-        lat,lon = query['latitude'], query['longitude']
-        return (lat,lon)
-        
-        
-                
+        (lat, lon) = (query['latitude'], query['longitude'])
+        return (lat, lon)
+
     def coord_to_xy(self, coord):
         """
             Converts latitude and longitude to X,Y coordinates
         """
+
         if not coord:
             return False
-        lat,lon = coord
-        
-        if self.projection == "mercator":
-            x = (self.imagewidth) * (180 + lon) / 360
+        (lat, lon) = coord
+
+        if self.projection == 'mercator':
+            x = self.imagewidth * (180 + lon) / 360
+
             def lat2y(a):
-                return math.log(math.tan(((lat*math.pi/180)*.5)+(math.pi*0.25)))
+                return math.log(math.tan(lat * math.pi / 180 * .5
+                                         + math.pi * 0.25))
+
             y = lat2y(lat)
-            y = (self.imageheight*.5) - (self.imagewidth*y/(2*math.pi))
-        elif projection == "equirectangular":
-            x = (self.imagewidth) * (180 + lon) / 360
-            y = (self.imageheight) * (90 - lat) / 180
+            y = self.imageheight * .5 - self.imagewidth * y / (2 * math.pi)
+        elif projection == 'equirectangular':
+            x = self.imagewidth * (180 + lon) / 360
+            y = self.imageheight * (90 - lat) / 180
         else:
-            print "Unknown map projection type"
+            print 'Unknown map projection type'
             exit()
-            
+
         x = x + self.xshift
         y = y + self.yshift
-        return (x,y)
-        
+        return (x, y)
+
     def draw(self, data, layer=False):
         """
             data:
             [((x,y),label),...]
             (x,y) is the coordinate produced by self.ip_to_xy
-            label is a string that will be drawn on the coordinate (usually an IP address)
+            label is a string that will be drawn on the coordinate 
+            (usually an IP address)
         """
-        if not layer: #then get a fresh image
+
+        if not layer:  # then get a fresh image
             self.drawimage = self.cleanimage.copy()
-        
-        #### !! SLICES 
-        slce=-self.showonlythelast
+
+        # ### !! SLICES
+
+        slce = -self.showonlythelast
         draw = ImageDraw.Draw(self.drawimage)
         num_nodes = len(data[slce:])
-        if num_nodes == 0: num_nodes = 1
-        colorstep = math.sqrt(255)/num_nodes
+        if num_nodes == 0:
+            num_nodes = 1
+        colorstep = math.sqrt(255) / num_nodes
         colorx = 0.0
         for node in data[slce:]:
-            x,y = node[0]
+            (x, y) = node[0]
             text = node[1]
             radius = self.radius
-            w,h = self.imagefont.getsize(text)
-            draw.ellipse((x-radius, y-radius, x+radius, y+radius), fill=(255,0,0))
-            #draw.arc((0,0,200,200), 180, 360, fill=(0,255,0))
-            if text is not "_blank": #then draw text !
-                draw.rectangle((x,y,x+w,y+h), fill=(int(math.pow(colorx,2.0)),0,0))
-                draw.text((x,y), text, font=self.imagefont)
-            colorx+=colorstep
-        
+            (w, h) = self.imagefont.getsize(text)
+            draw.ellipse((x - radius, y - radius, x + radius, y
+                          + radius), fill=(255, 0, 0))
+
+            # draw.arc((0,0,200,200), 180, 360, fill=(0,255,0))
+
+            if text is not '_blank':  # then draw text !
+                draw.rectangle((x, y, x + w, y + h),
+                               fill=(int(math.pow(colorx, 2.0)), 0, 0))
+                draw.text((x, y), text, font=self.imagefont)
+            colorx += colorstep
+
     def get_netstat(self):
         """
             Get active connections using psutil
             Uncomment "#import psutil" above to make this work
         """
+
         remote_ips = []
         for p in psutil.process_iter():
             try:
@@ -158,36 +186,38 @@ class Ikna(object):
                             if self.ispublic(ip):
                                 remote_ips.append(ip)
         return remote_ips
-        
+
     def parse_netstat(self):
         """
             Get active connections using netstat
             Return list of dicts, this allows for ordering and easy access
             [ { 'ip': ip, 'port': port }, ]
         """
-        remote_ips=[]
+
+        remote_ips = []
         if self.statefilter:
-            netout = os.popen("netstat -nt4 | grep " + self.statefilter)
+            netout = os.popen('netstat -nt4 | grep ' + self.statefilter)
             _data = netout.read()
-            data = _data.split("\n")[:-1]
+            data = _data.split('\n')[:-1]
         else:
-            netout = os.popen("netstat -nt4")
+            netout = os.popen('netstat -nt4')
             _data = netout.read()
-            data = _data.split("\n")[2:-1]
+            data = _data.split('\n')[2:-1]
         netout.close()
-                
+
         for line in data:
             ip = line.split()[4].split(':')[0]
             port = line.split()[4].split(':')[-1]
             if self.ispublic(ip):
                 if ip not in remote_ips:
-                    remote_ips.append( { 'ip' : ip , 'port' : port } )
+                    remote_ips.append({'ip': ip, 'port': port})
         return remote_ips
-        
+
     def parse_firewall(self):
         """
             Returns [ {'ip': ip, 'proto': proto, 'port' : port},]
         """
+
         templist = []
         pat = re.compile(r"^.*SRC=(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}).*PROTO=([A-Z]*).*DPT=([0-9]*).*$")
         with open(self.fwlog, 'r') as fd:
@@ -195,33 +225,42 @@ class Ikna(object):
                 try:
                     (srcip, proto, dport) = pat.search(line).groups()
                     if self.ispublic(srcip):
-                        templist.append( { 'ip' : srcip, 'proto': proto, 'port': dport } )
+                        templist.append({'ip': srcip, 'proto': proto,
+                                         'port': dport})
                 except:
                     pass
-        #reverse the list before uniqifying so the last log entry will stick
-        uniqlist = self._uniqify(templist[::-1]) 
-        return uniqlist[::-1] #reverse back to the proper order
+
+        # reverse the list before uniqifying so the last log entry will stick
+
+        uniqlist = self._uniqify(templist[::-1])
+        return uniqlist[::-1]  # reverse back to the proper order
 
     def ip_to_xy(self, ip):
         """
             Wrapper function that returns X,Y coords for a given IP
         """
+
         result = self.coord_to_xy(self.ip_to_latlon(ip))
         if result:
             return result
         else:
             return False
 
-    def ispublic(self,ip):
-        regexs = [  re.compile("^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$"),
-                    re.compile("^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$"),
-                    re.compile("^192\.168\.\d{1,3}\.\d{1,3}$"),
-                    re.compile("^172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$") ]
+    def ispublic(self, ip):
+        regexs = [re.compile("^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$"),
+                  re.compile("^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$"),
+                  re.compile("^192\.168\.\d{1,3}\.\d{1,3}$"),
+                  re.compile("^172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$")
+                 ]
         for regex in regexs:
             if regex.match(ip):
-                #print ip, "is private"
+
+                # print ip, "is private"
+
                 return False
-        #print ip, "is public"
+
+        # print ip, "is public"
+
         return True
 
     def makedrawdata(self, data=None, template=None):
@@ -232,75 +271,93 @@ class Ikna(object):
               { 'ip': '4.2.2.1', 'customfield': "My custom field 1" } ]
             You can define any custom field and use them in your template
             The 'ip' field is required, note that is has to be a string
-              
             Creates [((x,y),label),] to give to self.draw()
         """
-        rdns=False
+
+        rdns = False
         if template:
-            if "$host" in template:
-                rdns=True 
+            if '$host' in template:
+                rdns = True
         else:
-            template=self.template
+            template = self.template
 
         tmpl = string.Template(template)
-        
+
         def _apply_template(node):
             subst = {}
-            for key,value in node.items():   
-                subst[key] = value #this allows all keys to be used as template variables
-            for key,value in self.gi.record_by_addr(node['ip']).items():
-                subst[key] = value #add pygeoip fields as template variables
-            if rdns: #reverse dns takes time... 
+            for (key, value) in node.items():
+                # this allows all keys to be used as template variables
+                subst[key] = value
+            for (key, value) in self.gi.record_by_addr(node['ip']).items():
+                subst[key] = value  # add pygeoip fields as template variables
+            if rdns:  # reverse dns takes time...
                 subst['host'] = self.rlookup(node['ip'])
             return tmpl.substitute(subst)
-        
+
         if data:
-            return [(self.ip_to_xy(node['ip']), 
-                    _apply_template(node)) for node in data if self.ip_to_xy(node['ip'])]
-        if self.datasource == "netstat":
-            return [(self.ip_to_xy(node['ip']), 
-                    _apply_template(node)) for node in self.parse_netstat() if self.ip_to_xy(node['ip'])]
-        elif self.datasource == "firewall":
-            return [(self.ip_to_xy(node['ip']), 
-                    _apply_template(node)) for node in self.parse_firewall() if self.ip_to_xy(node['ip'])]
+            return [(self.ip_to_xy(node['ip']), _apply_template(node))
+                    for node in data if self.ip_to_xy(node['ip'])]
+        if self.datasource == 'netstat':
+            return [(self.ip_to_xy(node['ip']), _apply_template(node))
+                    for node in self.parse_netstat()
+                    if self.ip_to_xy(node['ip'])]
+        elif self.datasource == 'firewall':
+            return [(self.ip_to_xy(node['ip']), _apply_template(node))
+                    for node in self.parse_firewall()
+                    if self.ip_to_xy(node['ip'])]
         else:
-            return [((0,0), """Add data yourself with netpaper.update(data=yourdata)  or choose a valid NetPaper.datasource, 'netstat' or 'firewall'""")]
-        
+            return [((0, 0),
+                    """Add data yourself with ikna.update(data=yourdata)
+                     or choose a valid ikna.datasource,
+                     'netstat' or 'firewall'
+                    """
+                    )]
+
     def update(self, data=None, template=None, layer=None):
         """
             Collects data from the datasource (self.datasource) if no data is given.
             Draws the data and sets the background if self.setbg = True
         """
-        drawdata = self.makedrawdata(data,template) #this allows templating
-        self.draw(drawdata, layer) 
+
+        drawdata = self.makedrawdata(data, template)  # this allows templating
+        self.draw(drawdata, layer)
         self.drawimage.save(self.dstimg)
-        if self.setbg==True:
-            os.popen("feh --bg-max " + self.dstimg)
+        if self.setbg == True:
+            os.popen('feh --bg-max ' + self.dstimg)
 
     def rlookup(self, ip):
         """
             Simple reverse lookup of IP with caching, falls back to IP address
         """
-        #Check our simple cache
+
+        # Check our simple cache
+
         hname = self.rdnscache.get(ip)
-        if not hname: #then look it up
+        if not hname:  # then look it up
             try:
                 hname = socket.gethostbyaddr(ip)[0]
-            except: #fall back to ip
+            except:
+
+                    # fall back to ip
+
                 hname = ip
-            #put it in the cache for later
+
+            # put it in the cache for later
+
             self.rdnscache[ip] = hname
         return hname
-    
-    def _uniqify(self,seq):
+
+    def _uniqify(self, seq):
         """
             This function makes sure that dicts in a list are unique while preserving order
             The first occurrence will stick, feed a reverse list to make the last occurrence stick (then unreverse the output)
         """
+
         seen = {}
         result = []
         for item in seq:
-            if hash(repr(item)) in seen: continue
+            if hash(repr(item)) in seen:
+                continue
             seen[hash(repr(item))] = 1
             result.append(item)
         return result
@@ -309,14 +366,18 @@ class Ikna(object):
 #
 
 def main():
-    
-    ikna = Ikna(fontsize=20, yshift=125, datasource="firewall", showonlythelast=20)
+
+    ikna = Ikna(fontsize=20, yshift=125, datasource='firewall',
+                showonlythelast=20)
 
     while True:
-        ikna.update(template="$ip $port $proto $country_code")
-        #a.update( data=[ { 'ip': '8.8.8.8' , 'someinfo': 'Google DNS server'} ])
+        ikna.update(template='$ip $port $proto $country_code')
+
+        # a.update( data=[ { 'ip': '8.8.8.8' , 'someinfo': 'Google DNS server'} ])
+
         time.sleep(30)
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()
 
